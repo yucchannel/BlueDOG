@@ -17,6 +17,3 @@ To install BlueDOG:
 3. Run make command:
    ```bash
    make
-
-   
-   
