@@ -34,10 +34,10 @@ typedef struct Plugin {
 
 typedef struct Module {
     char name[MAX_MODULE_NAME];
-    void (*load)(const char *, const char *);  // Update to match the signature
+    void (*load)(const char *, const char *);
 } Module;
 
-// 字句解析
+// Tokenizer function
 Token get_next_token(const char *source, int *pos) {
     Token token = {TOKEN_UNKNOWN, ""};
     while (source[*pos] != '\0' && isspace(source[*pos])) (*pos)++;
@@ -93,7 +93,7 @@ Token get_next_token(const char *source, int *pos) {
     return token;
 }
 
-// ASTノード作成
+// Create a new AST node
 ASTNode* create_ast_node(ASTNodeType type, char *value) {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = type;
@@ -103,13 +103,13 @@ ASTNode* create_ast_node(ASTNodeType type, char *value) {
     return node;
 }
 
-// 演算式の解析
+// Parse an expression into an AST
 ASTNode* parse_expression(Token *tokens, int *index) {
     ASTNode *left = create_ast_node(AST_NUMBER, tokens[*index].value);
     (*index)++;
 
     if (tokens[*index].type == TOKEN_PLUS) {
-        (*index)++;  // 次のトークンに進む
+        (*index)++;
         ASTNode *right = create_ast_node(AST_NUMBER, tokens[*index].value);
         (*index)++;
         ASTNode *node = create_ast_node(AST_ADDITION, "+");
@@ -121,7 +121,7 @@ ASTNode* parse_expression(Token *tokens, int *index) {
     return left;
 }
 
-// AST評価（簡単な足し算）
+// Evaluate an AST
 int evaluate_ast(ASTNode *node) {
     if (node->type == AST_NUMBER) {
         return atoi(node->value);
@@ -133,28 +133,34 @@ int evaluate_ast(ASTNode *node) {
         return left_val + right_val;
     }
 
-    return 0;  // 不明なノードの場合は0を返す
+    return 0;  // Unknown node type
 }
 
-// プラグイン実行関数
+// Free AST nodes recursively
+void free_ast(ASTNode *node) {
+    if (node == NULL) return;
+    free_ast(node->left);
+    free_ast(node->right);
+    free(node);
+}
+
+// Load and execute a plugin
 void load_and_execute_plugin(const char *plugin_name, const char *filename) {
     printf("Plugin: %s\n", plugin_name);
     printf("Executing BlueDOG code from file: %s\n", filename);
 }
 
-// モジュール実行関数
+// Load and execute a module
 void load_and_execute_module(const char *module_name, const char *filename) {
     printf("Module: %s\n", module_name);
     printf("Loading module from file: %s\n", filename);
 
-    // モジュールを動的にロード
-    void *handle = dlopen("my_module.so", RTLD_NOW);
+    void *handle = dlopen(module_name, RTLD_NOW);
     if (!handle) {
         fprintf(stderr, "Error loading module: %s\n", dlerror());
         return;
     }
 
-    // モジュール内の関数を取得して実行
     void (*module_func)(void) = (void (*)())dlsym(handle, "module_function");
     if (module_func) {
         module_func();
@@ -162,13 +168,11 @@ void load_and_execute_module(const char *module_name, const char *filename) {
         fprintf(stderr, "Function not found in module: %s\n", dlerror());
     }
 
-    // モジュールを閉じる
     dlclose(handle);
 }
 
-// 実行関数
+// Main BlueDOG interpreter function
 void execute_bluedog(const char *filename, Plugin *plugins, int plugin_count, Module *modules, int module_count) {
-    // 仮のソースコードを読む（実際のコードはファイルから読み込む）
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Failed to open file: %s\n", filename);
@@ -189,7 +193,6 @@ void execute_bluedog(const char *filename, Plugin *plugins, int plugin_count, Mo
         tokens[token_count++] = token;
     }
 
-    // プラグインとモジュールの処理
     for (int i = 0; i < plugin_count; i++) {
         if (strstr(filename, plugins[i].name)) {
             plugins[i].execute(plugins[i].name, filename);
@@ -204,16 +207,13 @@ void execute_bluedog(const char *filename, Plugin *plugins, int plugin_count, Mo
         }
     }
 
-    // 式解析とAST生成
     int index = 0;
     ASTNode *ast = parse_expression(tokens, &index);
 
-    // AST評価
     int result = evaluate_ast(ast);
     printf("Result: %d\n", result);
 
-    // メモリ解放
-    free(ast);
+    free_ast(ast);
 }
 
 int main(int argc, char *argv[]) {
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
     };
 
     Module modules[] = {
-        {"web_server_module", load_and_execute_module}
+        {"my_module.so", load_and_execute_module}
     };
 
     execute_bluedog(argv[1], plugins, sizeof(plugins) / sizeof(Plugin), modules, sizeof(modules) / sizeof(Module));
