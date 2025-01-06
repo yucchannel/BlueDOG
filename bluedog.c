@@ -34,7 +34,7 @@ typedef struct Plugin {
 
 typedef struct Module {
     char name[MAX_MODULE_NAME];
-    void (*load)(void);
+    void (*load)(const char *, const char *);  // Update to match the signature
 } Module;
 
 // 字句解析
@@ -137,6 +137,11 @@ int evaluate_ast(ASTNode *node) {
 }
 
 // プラグイン実行関数
+void load_and_execute_plugin(const char *plugin_name, const char *filename) {
+    printf("Plugin: %s\n", plugin_name);
+    printf("Executing BlueDOG code from file: %s\n", filename);
+}
+
 // モジュール実行関数
 void load_and_execute_module(const char *module_name, const char *filename) {
     printf("Module: %s\n", module_name);
@@ -160,7 +165,6 @@ void load_and_execute_module(const char *module_name, const char *filename) {
     // モジュールを閉じる
     dlclose(handle);
 }
-
 
 // 実行関数
 void execute_bluedog(const char *filename, Plugin *plugins, int plugin_count, Module *modules, int module_count) {
@@ -195,7 +199,7 @@ void execute_bluedog(const char *filename, Plugin *plugins, int plugin_count, Mo
 
     for (int i = 0; i < module_count; i++) {
         if (strstr(filename, modules[i].name)) {
-            modules[i].load();
+            modules[i].load(modules[i].name, filename);
             break;
         }
     }
