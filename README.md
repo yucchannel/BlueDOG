@@ -1,5 +1,5 @@
 # BlueDOG
-![Uploading BlueDOG.png…]()
+![BlueDOG](https://github.com/user-attachments/assets/a1a3f24f-602d-4f44-9bba-a297a1bdc1f8)
 
 
 BlueDOG is a simple programming language written in C.
