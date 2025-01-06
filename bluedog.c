@@ -137,11 +137,6 @@ int evaluate_ast(ASTNode *node) {
 }
 
 // プラグイン実行関数
-void load_and_execute_plugin(const char *plugin_name, const char *filename) {
-    printf("Plugin: %s\n", plugin_name);
-    printf("Executing BlueDOG code from file: %s\n", filename);
-}
-
 // モジュール実行関数
 void load_and_execute_module(const char *module_name, const char *filename) {
     printf("Module: %s\n", module_name);
@@ -165,6 +160,7 @@ void load_and_execute_module(const char *module_name, const char *filename) {
     // モジュールを閉じる
     dlclose(handle);
 }
+
 
 // 実行関数
 void execute_bluedog(const char *filename, Plugin *plugins, int plugin_count, Module *modules, int module_count) {
