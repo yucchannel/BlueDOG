@@ -8,4 +8,4 @@ To install BlueDOG:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/username/bluedog.git
+   git clone https://github.com/yucchannel/bluedog.git
